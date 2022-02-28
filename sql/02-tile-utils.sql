@@ -1,26 +1,36 @@
-CREATE OR REPLACE FUNCTION tile_utils.tms_bounds(
-  _tms text = null
-) RETURNS geometry(Polygon)
+CREATE OR REPLACE FUNCTION tile_utils.tms_data(tms text = null)
+  RETURNS tile_utils.tms_definition
 AS $$
-  SELECT bounds
-  FROM imagery.tms
+  SELECT *
+  FROM tile_utils.tms_definition
   WHERE name = coalesce(
-    _tms,
+    tms,
     current_setting('tile_utils.default_tms')
   )
-);
+;$$ LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION tile_utils.tms_bounds(
+  tms text = null
+) RETURNS geometry(Polygon)
+AS $$
+  SELECT (tile_utils.tms_data(tms)).bounds
 $$
 LANGUAGE SQL IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION tils_utils.tms_srid(tms text = null)
+CREATE OR REPLACE FUNCTION tile_utils.tms_srid(tms text = null)
   RETURNS integer
 AS $$
   SELECT ST_SRID(tile_utils.tms_bounds(tms));
 $$ LANGUAGE SQL IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION tile_utils.tms_geographic_srid(tms text = null)
+  RETURNS integer
+AS $$
+  SELECT coalesce((tile_utils.tms_data(tms)).geographic_srid, 4326);
+$$ LANGUAGE SQL IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION
-  tile_utils._tile_envelope(
+
+CREATE OR REPLACE FUNCTION tile_utils.envelope(
     _x integer,
     _y integer,
     _z integer,
@@ -34,26 +44,11 @@ AS $$
 $$ LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION
-  tile_utils.tile_envelope(
-    _x integer,
-    _y integer,
-    _z integer,
-    _tms text = null 
-  ) RETURNS geometry(Polygon)
-AS $$
-  SELECT ST_Transform(
-    imagery._tile_envelope(_x, _y, _z, _tms),
-    imagery.
-  );
-$$ LANGUAGE SQL;
-
-
 -- This currently only works for square tiles.
 CREATE OR REPLACE FUNCTION tile_utils.tile_index(
   coord numeric,
   z integer,
-  _tms text = 'mars_mercator'
+  _tms text = null
 ) RETURNS integer AS $$
 DECLARE
   _tms_bounds geometry;
@@ -61,7 +56,7 @@ DECLARE
   _tms_size numeric;
   _tile_size numeric;
 BEGIN
-  SELECT bounds FROM imagery.tms WHERE name = _tms INTO _tms_bounds;
+  _tms_bounds := tile_utils.tms_bounds(_tms);
   _tms_size := ST_XMax(_tms_bounds) - ST_XMin(_tms_bounds);
   _tile_size := _tms_size/(2^z);
 
@@ -72,7 +67,7 @@ $$ LANGUAGE PLPGSQL STABLE;
 
 CREATE OR REPLACE FUNCTION tile_utils.containing_tiles(
   _geom geometry,
-  _tms text = 'mars_mercator'
+  _tms text = null
 ) RETURNS TABLE (
   x integer,
   y integer,
@@ -82,7 +77,7 @@ DECLARE
   _tms_bounds geometry;
   _geom_bbox box2d;
 BEGIN
-  SELECT bounds FROM imagery.tms WHERE name = _tms INTO _tms_bounds;
+  _tms_bounds := tile_utils.tms_bounds(_tms);
 
   IF ST_Within(_geom, ST_Transform(_tms_bounds, ST_SRID(_geom))) THEN
     _geom_bbox := ST_Transform(_geom, ST_SRID(_tms_bounds))::box2d;
@@ -117,7 +112,7 @@ $$ LANGUAGE plpgsql STABLE;
 
 CREATE OR REPLACE FUNCTION tile_utils.parent_tile(
   _geom geometry,
-  _tms text = 'mars_mercator'
+  _tms text = null
 ) RETURNS TABLE (
   x integer,
   y integer,

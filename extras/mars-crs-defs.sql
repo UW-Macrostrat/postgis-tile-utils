@@ -1,6 +1,5 @@
 INSERT INTO spatial_ref_sys (srid, auth_name, auth_srid, srtext, proj4text)
 VALUES (
-(
   949900,
   'USER',
   949900,
@@ -48,10 +47,12 @@ VALUES (
   AUTHORITY["EPSG","3857"]
 ]',
 '+proj=merc +a=3396190 +b=3396190 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs'
-)) ON CONFLICT DO NOTHING;
+) ON CONFLICT DO NOTHING;
 
-INSERT INTO tile_utils.tms_defs (name, bounds, geographic_srid) VALUES (
+INSERT INTO tile_utils.tms_definition (name, bounds, geographic_srid) VALUES (
   'mars_mercator',
-  ST_SetSRID(ST_MakeEnvelope(-10669445.554195097, -10669445.554195097, 10669445.554195097, 10669445.554195097), 949901)
+  ST_SetSRID(ST_MakeEnvelope(-10669445.554195097, -10669445.554195097, 10669445.554195097, 10669445.554195097), 949901),
   949900
 ) ON CONFLICT DO NOTHING;
+
+SET tile_utils.default_tms = 'mars_mercator';
