@@ -41,7 +41,21 @@ AS $$
     _z, _x, _y,
     tile_utils.tms_bounds(_tms)
   );
-$$ LANGUAGE SQL;
+$$ LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION tile_utils.tile_width(_z integer, _tms text = null)
+/** Tile width in projected coordinates (currently only works for square TMS)*/
+RETURNS numeric AS $$
+DECLARE
+  _tms_bounds geometry;
+  _tms_size numeric;
+  _tile_size numeric;
+BEGIN
+  _tms_bounds := tile_utils.tms_bounds(_tms);
+  _tms_size := ST_XMax(_tms_bounds) - ST_XMin(_tms_bounds);
+  RETURN _tms_size/(2^_z);
+END;
+$$ LANGUAGE PLPGSQL IMMUTABLE;
 
 
 -- This currently only works for square tiles.
@@ -50,19 +64,8 @@ CREATE OR REPLACE FUNCTION tile_utils.tile_index(
   z integer,
   _tms text = null
 ) RETURNS integer AS $$
-DECLARE
-  _tms_bounds geometry;
-  _geom_bbox box2d;
-  _tms_size numeric;
-  _tile_size numeric;
-BEGIN
-  _tms_bounds := tile_utils.tms_bounds(_tms);
-  _tms_size := ST_XMax(_tms_bounds) - ST_XMin(_tms_bounds);
-  _tile_size := _tms_size/(2^z);
-
-  RETURN floor(coord/_tile_size)::integer;
-END;
-$$ LANGUAGE PLPGSQL STABLE;
+  SELECT floor(coord/tile_utils.tile_width(z, _tms))::integer;
+$$ LANGUAGE SQL STABLE;
 
 
 CREATE OR REPLACE FUNCTION tile_utils.containing_tiles(

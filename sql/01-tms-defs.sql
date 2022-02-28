@@ -12,5 +12,14 @@ INSERT INTO tile_utils.tms_definition (name, bounds, geographic_srid) VALUES (
   4326
 ) ON CONFLICT DO NOTHING;
 
-SET tile_utils.default_tms = 'web_mercator'; 
+CREATE OR REPLACE FUNCTION tile_utils.set_default_tms(_tms text)
+RETURNS void
+AS
+$$
+BEGIN
+  EXECUTE format('ALTER DATABASE %I SET tile_utils.default_tms = %L', current_database(), _tms);
+END;
+$$
+LANGUAGE PLPGSQL;
 
+SELECT tile_utils.set_default_tms('web_mercator');
