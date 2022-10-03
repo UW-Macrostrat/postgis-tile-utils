@@ -1,6 +1,0 @@
-FROM postgis/postgis:13-3.1
-
-WORKDIR /tests/
-
-COPY ./test.sh /tests/test.sh
-COPY sql /tests/sql

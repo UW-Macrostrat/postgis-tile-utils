@@ -123,3 +123,26 @@ CREATE OR REPLACE FUNCTION tile_utils.parent_tile(
 ) AS $$
   SELECT x, y, z FROM tile_utils.containing_tiles(_geom, _tms) LIMIT 1;
 $$ LANGUAGE sql STABLE;
+
+
+CREATE OR REPLACE FUNCTION tile_utils.cluster_expansion_zoom(
+  geom geometry,
+  zoom integer,
+  expanded_pixel_width integer DEFAULT 256
+)
+/** Returns the zoom level at which the given tile-relative geometry will be expanded to the given pixel width.
+  The input geometry must already be in tile pixel coordinates created by ST_AsMVTGeom.
+  This is useful for calculating expansion zooms for clustered points.
+*/
+RETURNS integer AS $$
+  DECLARE
+    bbox_size double precision;
+    zoom_delta double precision;
+  BEGIN
+    SELECT greatest(ST_XMax(geom) - ST_XMin(geom), ST_YMax(geom)-ST_YMin(geom)) INTO bbox_size;
+
+    zoom_delta := sqrt(expanded_pixel_width/bbox_size);
+
+    RETURN round(zoom + zoom_delta);
+  END;
+$$ LANGUAGE plpgsql IMMUTABLE;

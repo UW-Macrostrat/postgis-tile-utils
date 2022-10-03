@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE SCHEMA IF NOT EXISTS tile_utils;
 
 CREATE TABLE IF NOT EXISTS tile_utils.tms_definition (
