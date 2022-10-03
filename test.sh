@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# passcount=0
-# failcount=0
+passcount=0
+failcount=0
 # runcount=0
 # testtotal=$(grep -c '^tf ' "$0")
 
@@ -22,14 +22,34 @@ for f in $(find $sqldir -name '*.sql'); do
   $psqld -f $f
 done
 
-# This is a demonstration test, at this point
-# Test cluster expansion zoom
-sql="SELECT tile_utils.cluster_expansion_zoom('MULTIPOINT(40 40, 20 21)', 10)"
-res=14
-if [[ $($psqld -c "$sql") == $res ]]; then
-  echo "cluster_expansion_zoom: pass"
-  # ((passcount++))
-else
-  echo "cluster_expansion_zoom: fail"
-  # ((failcount++))
-fi
+function run-test() {
+  name=$1
+  sql=$2
+  res=$3
+  echo "Running test $name"
+  echo "> $sql"
+  out=$($psqld -c "$sql")
+  echo -n "--> ${out:-"null"}"
+  if [[ "$out" == "$res" ]]; then
+    echo " == ${res:-null}"
+    echo "$name: pass"
+    ((passcount++))
+  else
+    echo " != ${res:-null}"
+    echo "$name: fail"
+    ((failcount++))
+  fi
+  echo ""
+}
+
+echo -e "\n\nRunning tests..."
+
+run-test "cluster_expansion_zoom" \
+  "SELECT tile_utils.cluster_expansion_zoom('MULTIPOINT(40 40, 20 21)', 10)" \
+  14
+
+run-test "cluster_expansion_zoom (single point)" \
+  "SELECT tile_utils.cluster_expansion_zoom('POINT(40 40)', 10)" \
+  ""
+
+echo "$passcount tests passed, $failcount tests failed"

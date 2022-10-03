@@ -141,6 +141,10 @@ RETURNS integer AS $$
   BEGIN
     SELECT greatest(ST_XMax(geom) - ST_XMin(geom), ST_YMax(geom)-ST_YMin(geom)) INTO bbox_size;
 
+    IF bbox_size = 0 THEN
+      RETURN null;
+    END IF;
+
     zoom_delta := sqrt(expanded_pixel_width/bbox_size);
 
     RETURN round(zoom + zoom_delta);
