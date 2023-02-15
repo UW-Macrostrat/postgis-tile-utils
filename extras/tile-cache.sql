@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS tile_cache.tile (
   layers text[] NOT NULL,
   tile bytea NOT NULL,
   profile text NOT NULL REFERENCES tile_cache.profile(name),
-  tms text NOT NULL REFERENCES tile_utils.tms_defs(name) DEFAULT tile_defs.default_tms,
+  tms text NOT NULL REFERENCES tile_utils.tms_definition(name) DEFAULT current_setting('tile_utils.default_tms'),
   created timestamp without time zone NOT NULL DEFAULT now(),
   last_used timestamp without time zone NOT NULL DEFAULT now(),
   PRIMARY KEY (x, y, z, layers),
