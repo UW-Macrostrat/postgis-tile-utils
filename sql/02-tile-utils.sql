@@ -6,8 +6,8 @@ AS $$
   WHERE name = coalesce(
     tms,
     current_setting('tile_utils.default_tms')
-  )
-;$$ LANGUAGE SQL IMMUTABLE;
+  );
+$$ LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION tile_utils.tms_bounds(
   tms text = null
