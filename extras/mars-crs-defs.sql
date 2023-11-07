@@ -55,4 +55,7 @@ INSERT INTO tile_utils.tms_definition (name, bounds, geographic_srid) VALUES (
   949900
 ) ON CONFLICT DO NOTHING;
 
-SELECT tile_utils.set_default_tms('mars_mercator');
+-- Replace default TMS function
+CREATE OR REPLACE FUNCTION tile_utils.default_tms() 
+RETURNS text AS $$ SELECT 'mars_mercator'; $$
+LANGUAGE SQL;

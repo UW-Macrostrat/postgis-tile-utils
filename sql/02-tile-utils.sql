@@ -5,7 +5,7 @@ AS $$
   FROM tile_utils.tms_definition
   WHERE name = coalesce(
     tms,
-    current_setting('tile_utils.default_tms')
+    tile_utils.default_tms()
   );
 $$ LANGUAGE SQL IMMUTABLE;
 
