@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS tile_cache.tile (
   x integer NOT NULL,
   y integer NOT NULL,
   z integer NOT NULL,
-  layers text[] NOT NULL,
+  layer text NOT NULL,
+  params jsonb NOT NULL,
   tile bytea NOT NULL,
   profile text NOT NULL REFERENCES tile_cache.profile(name),
   tms text NOT NULL REFERENCES tile_utils.tms_definition(name) DEFAULT tile_utils.default_tms(),
@@ -24,6 +25,7 @@ CREATE TABLE IF NOT EXISTS tile_cache.tile (
   CHECK (x >= 0 AND y >= 0 AND z >= 0 AND x < 2^z AND y < 2^z)
 );
 
+
 CREATE INDEX IF NOT EXISTS tile_cache_tile_last_used_idx ON tile_cache.tile (last_used);
 
 CREATE OR REPLACE VIEW tile_cache.tile_info AS
@@ -31,7 +33,8 @@ SELECT
   x,
   y,
   z,
-  layers,
+  layer,
+  params,
   length(tile) tile_size,
   profile,
   tms,
