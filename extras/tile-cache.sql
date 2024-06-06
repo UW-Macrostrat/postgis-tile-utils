@@ -13,16 +13,20 @@ CREATE TABLE IF NOT EXISTS tile_cache.tile (
   x integer NOT NULL,
   y integer NOT NULL,
   z integer NOT NULL,
-  layers text[] NOT NULL,
-  tile bytea NOT NULL,
   profile text NOT NULL REFERENCES tile_cache.profile(name),
+  -- Hash of the params
+  params uuid NOT NULL,
+  /* TODO: we could cache each layer separately and merge in the tile server */
+  --layers text[] NOT NULL,
+  tile bytea NOT NULL,
   tms text NOT NULL REFERENCES tile_utils.tms_definition(name) DEFAULT tile_utils.default_tms(),
   created timestamp without time zone NOT NULL DEFAULT now(),
   last_used timestamp without time zone NOT NULL DEFAULT now(),
-  PRIMARY KEY (x, y, z, layers),
+  PRIMARY KEY (x, y, z, params, profile),
   -- Make sure tile is within TMS bounds
   CHECK (x >= 0 AND y >= 0 AND z >= 0 AND x < 2^z AND y < 2^z)
 );
+
 
 CREATE INDEX IF NOT EXISTS tile_cache_tile_last_used_idx ON tile_cache.tile (last_used);
 
@@ -31,9 +35,9 @@ SELECT
   x,
   y,
   z,
-  layers,
-  length(tile) tile_size,
   profile,
+  params,
+  length(tile) tile_size,
   tms,
   created,
   last_used
