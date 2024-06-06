@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS tile_cache.tile (
   z integer NOT NULL,
   profile text NOT NULL REFERENCES tile_cache.profile(name),
   -- Hash of the params
-  params uuid NOT NULL,
+  params bytea NOT NULL,
   /* TODO: we could cache each layer separately and merge in the tile server */
   --layers text[] NOT NULL,
   tile bytea NOT NULL,
